@@ -9,8 +9,8 @@
 #include "freertos/semphr.h"
 #include "WiFiHandler.h"
 
-#define ONE_WIRE_BUS GPIO_NUM_4
-#define HEATER_PIN GPIO_NUM_13
+#define ONE_WIRE_BUS GPIO_NUM_32
+#define HEATER_PIN GPIO_NUM_27
 
 static OneWire sensorBus(ONE_WIRE_BUS);
 static DallasTemperature sensors(&sensorBus);

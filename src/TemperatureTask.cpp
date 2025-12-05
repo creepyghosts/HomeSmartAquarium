@@ -36,29 +36,28 @@ void temperatureTask(void *pvParameters) {
 
     initSensors();
     pinMode(HEATER_PIN, OUTPUT);
+    digitalWrite(HEATER_PIN, HIGH);
 
     float temperatureReading {0};
+    tempSet = 76;
+    tempHysteresis = 1;
 
     while(1) {
         sensors.requestTemperatures();
-        delay(5000);
+        vTaskDelay(pdMS_TO_TICKS(5000));
         temperatureReading = sensors.getTempF(sensorAddress);
         if(temperatureReading != DEVICE_DISCONNECTED_F) {
             // Hysteresis control of the heater power.
-            if(temperatureReading > (tempSet + tempHysteresis)) {
-                digitalWrite(HEATER_PIN, LOW);
-            }
-            else if(temperatureReading < (tempSet - tempHysteresis)) {
+            if(temperatureReading >= (tempSet + tempHysteresis)) {
                 digitalWrite(HEATER_PIN, HIGH);
             }
-            else {
+            else if(temperatureReading <= (tempSet - tempHysteresis)) {
                 digitalWrite(HEATER_PIN, LOW);
             }
-
             MQTTMessage temperature;
             strcpy(temperature.topicName, TEMPERATURE_READ_TOPIC);
             dtostrf(temperatureReading, 6, 2, temperature.payload);
-            xQueueSend(publishQueue, &temperature, 100);
+            xQueueSend(publishQueue, &temperature, pdMS_TO_TICKS(100));
         }
         else {
             Serial.println("Unable to read temperature sensor data!");

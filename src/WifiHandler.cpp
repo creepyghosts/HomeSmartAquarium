@@ -8,7 +8,7 @@ void setupWifi() {
     while(WiFi.status() != WL_CONNECTED){
         digitalWrite(CONNECTED_LED, LOW);
         Serial.print(".");
-        delay(100);
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 
     digitalWrite(CONNECTED_LED, HIGH);
@@ -39,7 +39,7 @@ void reconnectMqtt() {
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
-      delay(5000);
+      vTaskDelay(pdMS_TO_TICKS(5000));
     }
   }
 }
@@ -65,7 +65,7 @@ void WiFiTask(void *pvParameters) {
             client.publish(outgoingMessage.topicName, outgoingMessage.payload);
         }
         else {
-            delay(100);
+            vTaskDelay(pdMS_TO_TICKS(100));
         }
     }
 }
@@ -86,10 +86,10 @@ void incomingMessageTask(void *pvParameters) {
                     temp[2] = '\0'; // Null terminated
                     tempSet = atoi(temp);
                 }
-                else { // Following number is for setting temperature hysteresis band
+                else { // Following float is for setting temperature hysteresis band
                     char temp[4];
-                    strncpy(temp, (incomingMessage.payload + 1), 3);
-                    temp[3] = '\0';
+                    strncpy(temp, (incomingMessage.payload + 1), 3); // Copy the float value after the first char
+                    temp[3] = '\0'; // Manual null termination
                     tempHysteresis = atof(temp);
                 }
             } 
@@ -115,7 +115,8 @@ void incomingMessageTask(void *pvParameters) {
 */
 void callback(char *topic, byte *payload, unsigned int length) {
     MQTTMessage incomingMessage;
-    strcpy(incomingMessage.topicName, topic);
-    strcpy(incomingMessage.payload, (char*)payload);
-    xQueueSend(subscribeQueue, &incomingMessage, 1000);
+    strncpy(incomingMessage.topicName, topic, sizeof(incomingMessage.topicName) - 1);
+    strncpy(incomingMessage.payload, (char*)payload, length);
+    incomingMessage.payload[length] = '\0';
+    xQueueSend(subscribeQueue, &incomingMessage, 0);
 }
