@@ -17,8 +17,8 @@ static DallasTemperature sensors(&sensorBus);
 static DeviceAddress sensorAddress;
 
 extern QueueHandle_t publishQueue;
-extern int tempSet;
-extern float tempHysteresis;
+volatile extern int tempSet;
+volatile extern float tempHysteresis;
 
 void initSensors();
 void printAddress(DeviceAddress address);

@@ -7,7 +7,7 @@
 
 #define LIGHT_SWITCH_PIN GPIO_NUM_14
 
-extern bool lightStatus;
+volatile extern bool lightStatus;
 extern SemaphoreHandle_t lightSemaphore;
 
 void lightControlTask(void *pvParameters);

@@ -39,21 +39,34 @@ void temperatureTask(void *pvParameters) {
     digitalWrite(HEATER_PIN, HIGH);
 
     float temperatureReading {0};
+    bool paused = false;
     tempSet = 76;
     tempHysteresis = 1;
 
     while(1) {
+
+        if(ulTaskNotifyTake(pdTRUE, 0) == pdTRUE) {
+            paused = !paused;
+        }
+
         sensors.requestTemperatures();
         vTaskDelay(pdMS_TO_TICKS(5000));
         temperatureReading = sensors.getTempF(sensorAddress);
         if(temperatureReading != DEVICE_DISCONNECTED_F) {
-            // Hysteresis control of the heater power.
-            if(temperatureReading >= (tempSet + tempHysteresis)) {
+
+            if(!paused) {
+                // Hysteresis control of the heater power.
+                if(temperatureReading >= (tempSet + tempHysteresis)) {
+                    digitalWrite(HEATER_PIN, HIGH);
+                }
+                else if(temperatureReading <= (tempSet - tempHysteresis)) {
+                    digitalWrite(HEATER_PIN, LOW);
+                }
+            }
+            else { // Heater OFF when paused
                 digitalWrite(HEATER_PIN, HIGH);
             }
-            else if(temperatureReading <= (tempSet - tempHysteresis)) {
-                digitalWrite(HEATER_PIN, LOW);
-            }
+            
             MQTTMessage temperature;
             strcpy(temperature.topicName, TEMPERATURE_READ_TOPIC);
             dtostrf(temperatureReading, 6, 2, temperature.payload);

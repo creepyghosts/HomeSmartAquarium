@@ -27,9 +27,9 @@ typedef struct {
 extern QueueHandle_t publishQueue;
 extern QueueHandle_t subscribeQueue;
 extern SemaphoreHandle_t lightSemaphore;
-extern int tempSet;
-extern float tempHysteresis;
-extern bool lightStatus;
+volatile extern int tempSet;
+volatile extern float tempHysteresis;
+volatile extern bool lightStatus;
 
 static WiFiClient espClient;
 static PubSubClient client(espClient);
